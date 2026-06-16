@@ -155,3 +155,42 @@ variable "create_bucket_dirictories" {
     error_message = "bucket directory must be in this format 'text/plain"
   }
 }
+
+variable "enable_access_logging" {
+  description = "enable s3 access logging"
+  type = bool
+  default = false
+}
+
+variable "access_log_bucket_prefix" {
+  description = "prefix for s3 access bucket (only used if enable_access_logging is true)"
+  type        = string
+  default     = "aws-cli-access-logs"
+}
+
+variable "notification_email" {
+  description = "email address for cloudwatch alarm notication"
+  type = string
+  default = null
+
+  validation {
+    condition = var.notification_email || can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.notification_email))
+    error_message = "email must be a valid email address format"
+  }
+}
+
+variable "create_cli_user" {
+  description = "create a dedicated iam user for cli"
+  type = string
+  default = false
+}
+
+variable "cli_user_name" {
+  description = "name of the cli iam user (only used if create_cli_user is true)"
+  type = string
+  default = "aws_cli_user"
+  validation {
+    condition = can(regex("^[a-zA-Z0-9+=,.@_-]{1,64}$", var.cli_user_name))
+   error_message = "CLI user name must be 1-64 characters and contain only alphanumeric characters and +=,.@_- symbols."
+  }
+}
