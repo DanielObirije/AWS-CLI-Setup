@@ -1,4 +1,7 @@
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
 
 resource "random_id" "bucket_prefix" {
  byte_length = 4
@@ -144,3 +147,100 @@ resource "aws_iam_instance_profile" "cli_ec2_profile" {
     }
 }
 
+resource "aws_s3_object" "sample_json_file" {
+  count = var.create_simple_objects ? 1 : 0
+  bucket = aws_s3_bucket.s3_cli_bucket.id
+  key = "simple-files/welcom.txt"
+  content = templatefile("${path.module}/templates/welcome.txt.tpl",{
+    bucket_name = aws_s3_bucket.s3_cli_bucket.id
+    aws_region = data.aws_region.current.name
+    acccount_id = data.aws_caller_identity.current.account_id
+
+  })
+  content_type = "text/plain"
+  metadata = {
+    purpose = "aws cli "
+    created_by = "terraform"
+    recipe = "aws-cli-setup"
+  }
+
+  tags = {
+      name = "cli s3 object "
+      purpose = "cli s3 object"
+      recipe = "aws-cli-setup"
+      manageBy ="terraform"
+    }
+}
+
+
+resource "aws_s3_object" "sample_file" {
+  count = var.create_simple_objects ? 1 : 0
+  bucket = aws_s3_bucket.s3_cli_bucket.id
+  key = "simple-files/config.json"
+  content = jsonencode({
+    tutoral = {
+      name = "aws_cli_first_command"
+      bucket_name = aws_s3_bucket.s3_cli_bucket.id
+      region = data.aws_region.current.name
+      version = "1.0"
+    }
+    commands = [
+      "aws s3 ls",
+      "aws s3 cp",
+      "aws s3api head-bucket",
+      "aws sts get-caller-identity"
+    ]
+  })
+  content_type = "application/json"
+
+  metadata = {
+    purpose = "aws cli "
+    created_by = "terraform"
+    recipe = "aws-cli-setup"
+  }
+
+  tags = {
+      name = "cli s3 object "
+      purpose = "cli s3 object"
+      recipe = "aws-cli-setup"
+      manageBy ="terraform"
+    }
+}
+
+resource "aws_cloudwatch_log_group" "cli_logs" {
+  count = var.enable_cloudwatch_logging ? 1 : 0
+  name = "/aws/cli/${random_id.bucket_prefix}"
+  retention_in_days = 7
+  tags = {
+      name = "cli cloudwatch logs"
+      purpose = "cli cloudwatch logs "
+      recipe = "aws-cli-setup"
+      manageBy ="terraform"
+    }
+}
+
+resource "local_file" "welcome_template" {
+  count =  var.create_simple_objects ? 1 : 0
+  filename =  "${path.module}/templates/welcom.txt.tpl"
+  content = <<-EOT
+    Welcome to the AWS CLI Tutorial!
+    rf
+    This file was created by Terraform to help you practice AWS CLI commands.
+
+    Bucket Information:
+    - Bucket Name: ${"{bucket_name}"}
+    - AWS Region: ${"{aws_region}"}
+    - Account ID: ${"{account_id}"}
+
+    Practice Commands:
+    1. List bucket contents: aws s3 ls s3://${"{bucket_name}"}/
+    2. Copy this file: aws s3 cp s3://${"{bucket_name}"}/sample-files/welcome.txt ./
+    3. Get bucket location: aws s3api get-bucket-location --bucket ${"{bucket_name}"}
+    4. Check encryption: aws s3api get-bucket-encryption --bucket ${"{bucket_name}"}
+
+    Happy learning with AWS CLI!
+    Generated on: $(date)
+EOT
+
+depends_on = [ aws_s3_bucket.s3_cli_bucket ]
+}
