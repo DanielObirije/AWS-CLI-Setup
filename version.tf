@@ -20,10 +20,13 @@ terraform {
 
  provider_meta "aws" {
    defult_config {
-     tags {
-        project = "AWS CLI proejct"
-        ManagedBy = "Terraform"
-     }
+      tags = {
+      name = "aws cli setup"
+      purpose ="setting up aws cli"
+      managedBy = "Terraform"
+      environment = var.environment
+      recipe = "aws-cli-setup"
+  }
    }
  }
 }

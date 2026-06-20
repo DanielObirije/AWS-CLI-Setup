@@ -121,12 +121,13 @@ resource "aws_iam_role" "cli_ec2_role" {
     
  })
 
- tags = {
-    name = "cli s3 role"
-    purpose = "adding correct s3 role"
+  tags = {
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
     recipe = "aws-cli-setup"
-     manageBy ="terraform"
-   }
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ec2_cli_role_policy" {
@@ -202,6 +203,20 @@ resource "aws_s3_object" "sample_file" {
     recipe = "aws-cli-setup"
   }
 
+ tags = {
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
+    recipe = "aws-cli-setup"
+  }
+}
+
+resource "aws_s3_object" "logs_directory" {
+  count = var.create_simple_objects ? 1 : 0
+  bucket = aws_s3_bucket.s3_cli_bucket.id
+  key = "logs/"
+  content_type = "application/x-dictionary"
  tags = {
     name = "aws cli setup"
     purpose ="setting up aws cli"
