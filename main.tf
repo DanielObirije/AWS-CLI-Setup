@@ -8,7 +8,7 @@ resource "random_id" "bucket_prefix" {
 }
 
 resource "aws_s3_bucket" "s3_cli_bucket" {
-  bucket = "${var.bucket_prefix}-${random_id.bucket_prefix}"
+  bucket = "${var.bucket_prefix}-${random_id.bucket_prefix.hex}"
 
   tags = {
     name = "aws cli setup"
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "s3_cli_bucket" {
 resource "aws_s3_bucket_versioning" "s3_cli_bucket_versioning" {
   bucket = aws_s3_bucket.s3_cli_bucket.id
   versioning_configuration {
-   status = "enabled"
+   status = var.enable_s3_versioning ? "Enabled" : "Suspended"
   }
 }
 
@@ -30,28 +30,29 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_cli_bucket_enc
    bucket = aws_s3_bucket.s3_cli_bucket.id
    rule {
      apply_server_side_encryption_by_default {
-       sse_algorithm = "AES256"
+       sse_algorithm = var.encription_algorithm
      }
-     bucket_key_enabled = true
+     bucket_key_enabled =  var.enable_bucket_encription
    }
 }
 
 resource "aws_s3_bucket_public_access_block" "s3_cli_public_access_config" {
   bucket = aws_s3_bucket.s3_cli_bucket.id
-  block_public_acls = true
-  block_public_policy = true
-  ignore_public_acls = true
-  restrict_public_buckets = true
+  block_public_acls = var.enable_public_access_block
+  block_public_policy = var.enable_public_access_block
+  ignore_public_acls =  var.enable_public_access_block
+  restrict_public_buckets = var.enable_public_access_block
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "s3_cli_lifecycle_config" {
   bucket = aws_s3_bucket.s3_cli_bucket.id
   rule {
     id = "cli_cleanup"
-    status = "enabled"
+    status = "Enabled"
 
+    filter {}
     expiration {
-      days = 7
+      days = var.bucket_lifycycle_days
     }
 
     noncurrent_version_expiration {
@@ -67,9 +68,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3_cli_lifecycle_config" {
 resource "aws_iam_policy" "cli_s3_iam_policy" {
    name = "${var.iam_policy_prefix}-s3-access"
    description = "policy for s3 cli bucket"
-   policy = jsondecode({
-     version = "2012-10-17"
-     statment = [
+   policy = jsonencode({
+     Version = "2012-10-17"
+     Statement = [
     {
        Effect = "Allow"
        Action = [
@@ -78,7 +79,7 @@ resource "aws_iam_policy" "cli_s3_iam_policy" {
           "s3:GetBucketEncryption",
           "s3:GetBucketVersioning"
        ]
-       Resource = aws_s3_bucket.s3_cli_bucket.id.arn
+       Resource = aws_s3_bucket.s3_cli_bucket.arn
      },
      {
         Effect = "Allow"
@@ -89,7 +90,7 @@ resource "aws_iam_policy" "cli_s3_iam_policy" {
           "s3:GetObjectVersion",
           "s3:GetObjectMetadata"
         ]
-        Resource = "${aws_s3_bucket.s3_cli_bucket.id.arn}/*"
+        Resource = "${aws_s3_bucket.s3_cli_bucket.arn}/*"
      }
      ]
    })
@@ -107,9 +108,9 @@ resource "aws_iam_role" "cli_ec2_role" {
   count =  var.create_ec2_role ? 1 : 0
   name = "${var.iam_role_prefix}-ec2-cli"
 
- assume_role_policy = jsondecode({
+ assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statment = [
+    Statement = [
         {
            Effect = "Allow"
            Action = "sts:AssumeRole"
@@ -133,7 +134,7 @@ resource "aws_iam_role" "cli_ec2_role" {
 resource "aws_iam_role_policy_attachment" "ec2_cli_role_policy" {
   count = var.create_ec2_role ? 1 : 0
   role = aws_iam_role.cli_ec2_role[0].name
-  policy_arn = aws_iam_policy.cli_s3_iam_policy
+  policy_arn = aws_iam_policy.cli_s3_iam_policy.arn
 }
 
 resource "aws_iam_instance_profile" "cli_ec2_profile" {
@@ -228,8 +229,8 @@ resource "aws_s3_object" "logs_directory" {
 
 resource "aws_cloudwatch_log_group" "cli_logs" {
   count = var.enable_cloudwatch_logging ? 1 : 0
-  name = "/aws/cli/${random_id.bucket_prefix}"
-  retention_in_days = 7
+  name = "/aws/cli/${random_id.bucket_prefix.hex}"
+  retention_in_days = var.cloudwatch_logs_retention_days 
   tags = {
     name = "aws cli setup"
     purpose ="setting up aws cli"

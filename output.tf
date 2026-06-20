@@ -2,7 +2,7 @@
 # S3 Bucket Information
 output "s3_bucket_name" {
   description = "Name of the s3 bucket create for cli"
-  value = aws_s3_bucket.s3_cli_bucket
+  value = aws_s3_bucket.s3_cli_bucket.id
 }
 
 output "s3_bucket_arn" {
@@ -47,11 +47,6 @@ output "ec2_role_arn" {
 output "ec2_role_name" {
   description = "Name of instance profile for EC2 (if created)"
   value = var.create_ec2_role ? aws_iam_role.cli_ec2_role[0].name : null
-}
-
-output "ec2_instance_profile_name" {
-  description = "Name of the instance profile for EC2 (if created)"
-  value = var.create_ec2_role  ? aws_iam_instance_profile.cli_ec2_profile.name[0]: null
 }
 
 
