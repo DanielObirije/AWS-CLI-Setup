@@ -94,12 +94,13 @@ resource "aws_iam_policy" "cli_s3_iam_policy" {
      ]
    })
 
-   tags = {
-    name = "cli s3 policy"
-    purpose = "adding correct s3 polity"
+  tags = {
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
     recipe = "aws-cli-setup"
-     manageBy ="terraform"
-   }
+  }
 }
 
 resource "aws_iam_role" "cli_ec2_role" {
@@ -140,11 +141,12 @@ resource "aws_iam_instance_profile" "cli_ec2_profile" {
   role = aws_iam_role.cli_ec2_role[0].name
 
   tags = {
-      name = "ec2 cli profile"
-      purpose = "adding profile for ec2 cli"
-      recipe = "aws-cli-setup"
-      manageBy ="terraform"
-    }
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
+    recipe = "aws-cli-setup"
+  }
 }
 
 resource "aws_s3_object" "sample_json_file" {
@@ -164,12 +166,13 @@ resource "aws_s3_object" "sample_json_file" {
     recipe = "aws-cli-setup"
   }
 
-  tags = {
-      name = "cli s3 object "
-      purpose = "cli s3 object"
-      recipe = "aws-cli-setup"
-      manageBy ="terraform"
-    }
+ tags = {
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
+    recipe = "aws-cli-setup"
+  }
 }
 
 
@@ -199,12 +202,13 @@ resource "aws_s3_object" "sample_file" {
     recipe = "aws-cli-setup"
   }
 
-  tags = {
-      name = "cli s3 object "
-      purpose = "cli s3 object"
-      recipe = "aws-cli-setup"
-      manageBy ="terraform"
-    }
+ tags = {
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
+    recipe = "aws-cli-setup"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "cli_logs" {
@@ -212,11 +216,12 @@ resource "aws_cloudwatch_log_group" "cli_logs" {
   name = "/aws/cli/${random_id.bucket_prefix}"
   retention_in_days = 7
   tags = {
-      name = "cli cloudwatch logs"
-      purpose = "cli cloudwatch logs "
-      recipe = "aws-cli-setup"
-      manageBy ="terraform"
-    }
+    name = "aws cli setup"
+    purpose ="setting up aws cli"
+    managedBy = "Terraform"
+    environment = var.environment
+    recipe = "aws-cli-setup"
+  }
 }
 
 resource "local_file" "welcome_template" {
